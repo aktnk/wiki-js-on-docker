@@ -147,27 +147,32 @@ docker compose ps
 
 ## Network Architecture
 
-```
-┌─────────────────────────────────────────┐
-│         Host Machine (Port 80)          │
-└──────────────────┬──────────────────────┘
-                   │
-         ┌─────────▼─────────┐
-         │   wiki-network    │
-         │   (Bridge Mode)   │
-         └─────────┬─────────┘
-                   │
-         ┌─────────┴─────────┐
-         │                   │
-    ┌────▼────┐         ┌───▼───┐
-    │  Wiki.js│◄────────┤   DB  │
-    │  :3000  │         │ :5432 │
-    └─────────┘         └───────┘
+```mermaid
+graph TB
+    subgraph Host["Host Machine"]
+        Port80["Port 80"]
+    end
+
+    subgraph Network["wiki-network (Bridge Mode)"]
+        Wiki["Wiki.js<br/>:3000"]
+        DB["PostgreSQL<br/>:5432"]
+    end
+
+    Port80 -->|"HTTP"| Wiki
+    Wiki -->|"PostgreSQL<br/>Protocol"| DB
+
+    style Host fill:#e1f5ff,stroke:#01579b,stroke-width:2px
+    style Network fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    style Wiki fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px
+    style DB fill:#fff9c4,stroke:#f57f17,stroke-width:2px
+    style Port80 fill:#bbdefb,stroke:#1976d2,stroke-width:2px
 ```
 
-- PostgreSQL is only accessible to Wiki.js container
+**Network Isolation:**
+- PostgreSQL is only accessible to Wiki.js container within `wiki-network`
 - Wiki.js is exposed on host port 80
-- Internal communication via `wiki-network`
+- Internal communication via isolated `wiki-network` bridge
+- Database port (5432) is NOT exposed to host machine
 
 ## Logging
 
